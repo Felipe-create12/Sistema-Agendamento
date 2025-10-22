@@ -94,6 +94,16 @@ namespace Sistema_Agendamento.Controllers
         }
 
         private double ToRadians(double deg) => deg * (Math.PI / 180);
-        
+
+        [HttpGet("filtrar/cidade")]
+        public async Task<ActionResult<IEnumerable<EmpresaDto>>> GetByCityAsync([FromQuery] string cidade)
+        {
+            if (string.IsNullOrWhiteSpace(cidade))
+                return BadRequest("Informe o nome da cidade para filtrar.");
+
+            var lista = await service.GetEmpresasPorCidadeAsync(cidade);
+            return Ok(lista);
+        }
+
     }
 }

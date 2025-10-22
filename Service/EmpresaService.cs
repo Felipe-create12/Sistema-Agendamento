@@ -100,5 +100,12 @@ namespace Service
         }
 
         private double ToRadians(double deg) => deg * (Math.PI / 180);
+
+        public async Task<IEnumerable<EmpresaDto>> GetEmpresasPorCidadeAsync(string cidade)
+        {
+            var empresas = await this.repositorio.getAllAsync(e => e.Cidade.ToLower().Contains(cidade.ToLower()));
+            return mapper.Map<IEnumerable<EmpresaDto>>(empresas);
+        }
+
     }
 }

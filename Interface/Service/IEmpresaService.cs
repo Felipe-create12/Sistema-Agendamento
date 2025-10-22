@@ -19,5 +19,7 @@ namespace Interface.Service
                         expression);
         Task updateAsync(EmpresaDto empresa);
         Task<IEnumerable<EmpresaDto>> GetEmpresasProximasAsync(double latitude, double longitude, double raioKm);
+        Task<IEnumerable<EmpresaDto>> GetEmpresasPorCidadeAsync(string cidade);
+
     }
 }
