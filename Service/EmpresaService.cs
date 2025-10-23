@@ -42,9 +42,35 @@ namespace Service
 
         public async Task<EmpresaDto?> getAsyc(int id)
         {
-            var cat = await this.repositorio.getAsyc(id);
-            return mapper.Map<EmpresaDto>(cat);
+            var empresa = await repositorio.getAsyc(id); // já faz Include de Servicos e Profissionais
+            if (empresa == null) return null;
+
+            return new EmpresaDto
+            {
+                Id = empresa.Id,
+                Nome = empresa.Nome,
+                Endereco = empresa.Endereco,
+                Cidade = empresa.Cidade,
+                Estado = empresa.Estado,
+                Cep = empresa.Cep,
+                Telefone = empresa.Telefone,
+                Servicos = empresa.Servicos?.Select(s => new ServicoDto
+                {
+                    Id = s.Id,
+                    nome = s.nome,
+                    preco = s.preco,
+                    DuracaoEmMinutos = s.DuracaoEmMinutos
+                }).ToList() ?? new List<ServicoDto>(),
+                Profissionais = empresa.Profissionais?.Select(p => new ProfissionalDto
+                {
+                    Id = p.Id,
+                    nome = p.nome,
+                    especialidade = p.especialidade
+                }).ToList() ?? new List<ProfissionalDto>()
+            };
         }
+
+
 
         public async Task removeAsyc(int id)
         {

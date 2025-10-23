@@ -22,7 +22,8 @@ namespace Dominio.Dto
 
         public double Distancia { get; set; }
 
-
+        public List<ServicoDto> Servicos { get; set; } = new List<ServicoDto>();
+        public List<ProfissionalDto> Profissionais { get; set; } = new List<ProfissionalDto>();
 
     }
 }
