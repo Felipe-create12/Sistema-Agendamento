@@ -42,7 +42,7 @@ namespace Service
             if (profissional == null)
                 throw new Exception("Profissional informado não existe.");
 
-            var servico = await _servicoService.getAsyc(agendamentoDto.idServicio);
+            var servico = await _servicoService.getAsyc(agendamentoDto.idServico);
             if (servico == null)
                 throw new Exception("Serviço informado não existe.");
 
@@ -90,6 +90,13 @@ namespace Service
             var cat = mapper.Map<Agendamento>(agendamentoDto);
             await this.repositorio.updateAsync(cat);
         }
+
+        public async Task<IEnumerable<AgendamentoDto>> getByClienteAsync(int idCliente)
+        {
+            var lista = await repositorio.getAllAsync(a => a.idCliente == idCliente);
+            return mapper.Map<IEnumerable<AgendamentoDto>>(lista);
+        }
+
 
     }
 }

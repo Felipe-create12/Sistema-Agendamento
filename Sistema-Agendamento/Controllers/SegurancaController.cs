@@ -45,7 +45,8 @@ namespace Sistema_Agendamento.Controllers
                 access_token = tokenString,
                 token_type = "Bearer",
                 expires_in = 60 * 60, // 60 minutos
-                user = user.user
+                user = user.user,
+                clienteId = user.ClienteId
             });
         }
 

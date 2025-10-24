@@ -18,5 +18,6 @@ namespace Interface.Service
             getAllAsync(Expression<Func<Agendamento, bool>>
                         expression);
         Task updateAsync(AgendamentoDto agendamentoDto);
+        Task<IEnumerable<AgendamentoDto>> getByClienteAsync(int idCliente);
     }
 }

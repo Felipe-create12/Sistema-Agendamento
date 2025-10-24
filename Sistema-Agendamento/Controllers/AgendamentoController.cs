@@ -80,5 +80,17 @@ namespace Sistema_Agendamento.Controllers
             else return BadRequest(result);
 
         }
+
+        [HttpGet("cliente/{idCliente}")]
+        public async Task<ActionResult<IEnumerable<AgendamentoDto>>> GetByClienteAsync(int idCliente)
+        {
+            var lista = await this.service.getByClienteAsync(idCliente);
+
+            if (lista == null || !lista.Any())
+                return NotFound("Nenhum agendamento encontrado para este cliente.");
+
+            return Ok(lista);
+        }
+
     }
 }

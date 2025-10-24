@@ -10,9 +10,10 @@ namespace Dominio.Dto
     {
         public int Id { get; set; }
 
-        public int idServicio { get; set; }
+        public int idServico { get; set; }
         public int idProfissional { get; set; }
         public int idCliente { get; set; }
+        public int EmpresaId { get; set; }
         public DateTime DataHora { get; set; }
         public string Status { get; set; } = string.Empty;
     }
