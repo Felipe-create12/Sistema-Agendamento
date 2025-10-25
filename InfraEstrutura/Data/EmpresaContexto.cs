@@ -33,9 +33,10 @@ namespace InfraEstrutura.Data
                 builder.Property(p => p.email).IsRequired().HasMaxLength(150);
                 builder.Property(p => p.telefone).IsRequired().HasMaxLength(150);
                 builder.HasOne(c => c.User)
-                  .WithOne(u => u.Cliente)
-                  .HasForeignKey<User>(u => u.ClienteId)
-                  .OnDelete(DeleteBehavior.Restrict);
+                   .WithOne(u => u.Cliente)
+                   .HasForeignKey<User>(u => u.ClienteId)
+                   .IsRequired()  // obrigatório
+                   .OnDelete(DeleteBehavior.Restrict);
             });
 
             modelBuilder.Entity<Empresa>(builder =>

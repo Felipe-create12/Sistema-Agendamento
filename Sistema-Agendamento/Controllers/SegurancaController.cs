@@ -37,17 +37,25 @@ namespace Sistema_Agendamento.Controllers
             if (user.senha != loginDetalhes.senha)
                 return Unauthorized(new { message = "Senha incorreta." });
 
-            // 🔹 Gera token JWT real com base no usuário
-            var tokenString = GerarTokenJWT(user);
-
-            return Ok(new
+            if (!user.ClienteId.Equals(0)) // garante que existe cliente
             {
-                access_token = tokenString,
-                token_type = "Bearer",
-                expires_in = 60 * 60, // 60 minutos
-                user = user.user,
-                clienteId = user.ClienteId
-            });
+
+                // 🔹 Gera token JWT real com base no usuário
+                var tokenString = GerarTokenJWT(user);
+                return Ok(new
+                {
+                    access_token = tokenString,
+                    token_type = "Bearer",
+                    expires_in = 60 * 60,
+                    user = user.user,
+                    clienteId = user.ClienteId
+                });
+            }
+            else
+            {
+                return BadRequest(new { message = "Usuário não possui cliente associado." });
+            }
+
         }
 
         private string GerarTokenJWT(UserDto user)

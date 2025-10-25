@@ -48,10 +48,10 @@ namespace Sistema_Agendamento.Controllers
 
         [HttpGet("filtrar/{nome}")]
         public async Task<ActionResult<IEnumerable<ClienteDto>>>
-          getDescricaoAsync(string descricao)
+          getNomeAsync(string nome)
         {
             var lista = await this.service.getAllAsync(
-                p => p.nome.Contains(descricao));
+               p => p.nome.Contains(nome));
             return Ok(lista);
 
         }

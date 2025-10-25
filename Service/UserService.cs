@@ -87,7 +87,8 @@ namespace Service
             var entidade = new User
             {
                 user = registerDto.User,
-                senha = registerDto.Senha // ideal criptografar
+                senha = registerDto.Senha, // ideal criptografar
+                ClienteId = registerDto.ClienteId
             };
 
             entidade = await repositorio.addAsync(entidade);
