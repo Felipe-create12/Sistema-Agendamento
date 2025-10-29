@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
-using System.Text;
 using System.Threading.Tasks;
 using AutoMapper;
 using Dominio.Entidades;
@@ -10,94 +9,92 @@ using Dominio.Dto;
 using Interface.RepositorioI;
 using Interface.Service;
 
-
 namespace Service
 {
-    public class AgendamentoService: IAgendamentoService
+    public class AgendamentoService : IAgendamentoService
     {
-        private IAgendamentoRepositorio repositorio;
-        private  IClienteService _clienteService;
-        private  IProfissionalService _profissionalService;
-        private  IServicoService _servicoService;
+        private readonly IAgendamentoRepositorio _repositorio;
+        private readonly IClienteService _clienteService;
+        private readonly IProfissionalService _profissionalService;
+        private readonly IServicoService _servicoService;
+        private readonly IMapper _mapper;
 
-        private IMapper mapper;
-
-        public AgendamentoService(IAgendamentoRepositorio repositorio,
-            IMapper mapper, IClienteService clienteService, IProfissionalService profissionalService, IServicoService servicoService)
+        public AgendamentoService(
+            IAgendamentoRepositorio repositorio,
+            IMapper mapper,
+            IClienteService clienteService,
+            IProfissionalService profissionalService,
+            IServicoService servicoService)
         {
-            this.repositorio = repositorio;
-            this.mapper = mapper;
-            this._clienteService = clienteService;
-            this._profissionalService = profissionalService;
-            this._servicoService = servicoService;
+            _repositorio = repositorio;
+            _mapper = mapper;
+            _clienteService = clienteService;
+            _profissionalService = profissionalService;
+            _servicoService = servicoService;
         }
 
         public async Task<AgendamentoDto> addAsync(AgendamentoDto agendamentoDto)
         {
-            var cliente = await _clienteService.getAsyc(agendamentoDto.idCliente);
-            if (cliente == null)
-                throw new Exception("Cliente informado não existe.");
-
+            // 🔹 Verifica se o profissional existe
             var profissional = await _profissionalService.getAsyc(agendamentoDto.idProfissional);
             if (profissional == null)
                 throw new Exception("Profissional informado não existe.");
 
+            // 🔹 Verifica se o serviço existe
             var servico = await _servicoService.getAsyc(agendamentoDto.idServico);
             if (servico == null)
                 throw new Exception("Serviço informado não existe.");
 
-            var conflito = (await repositorio.getAllAsync(a =>
+            // 🔹 Verifica conflito de horário do profissional
+            var conflito = (await _repositorio.getAllAsync(a =>
                 a.idProfissional == agendamentoDto.idProfissional &&
                 a.DataHora == agendamentoDto.DataHora)).Any();
 
             if (conflito)
                 throw new Exception("O profissional já possui um agendamento nesse horário.");
 
-
-            var entidade = mapper.Map<Agendamento>(agendamentoDto);
-            entidade = await this.repositorio.addAsync(entidade);
-            return mapper.Map<AgendamentoDto>(entidade);
+            // 🔹 Cria o agendamento
+            var entidade = _mapper.Map<Agendamento>(agendamentoDto);
+            entidade = await _repositorio.addAsync(entidade);
+            return _mapper.Map<AgendamentoDto>(entidade);
         }
 
         public async Task<IEnumerable<AgendamentoDto>> getAllAsync(Expression<Func<Agendamento, bool>> expression)
         {
-            var listaCat =
-               await this.repositorio.getAllAsync(expression);
-            return mapper.Map<IEnumerable<AgendamentoDto>>(listaCat);
+            var lista = await _repositorio.getAllAsync(expression);
+            return _mapper.Map<IEnumerable<AgendamentoDto>>(lista);
         }
 
         public async Task<AgendamentoDto> getAsyc(int id)
         {
-            var cat = await this.repositorio.getAsyc(id);
-            return mapper.Map<AgendamentoDto>(cat);
+            var agendamento = await _repositorio.getAsyc(id);
+            return _mapper.Map<AgendamentoDto>(agendamento);
         }
 
         public async Task removeAsyc(int id)
         {
-            var cat = await this.repositorio.getAsyc(id);
-            if (cat != null)
-                await this.repositorio.removeAsyc(cat);
+            var agendamento = await _repositorio.getAsyc(id);
+            if (agendamento != null)
+                await _repositorio.removeAsyc(agendamento);
         }
 
         public async Task updateAsync(AgendamentoDto agendamentoDto)
         {
-            var existente = await repositorio.getAsyc(agendamentoDto.Id);
+            var existente = await _repositorio.getAsyc(agendamentoDto.Id);
             if (existente == null)
                 throw new Exception("Agendamento não encontrado para atualização.");
 
             if (existente.Status == "Executado" && agendamentoDto.Status == "Cancelado")
                 throw new Exception("Não é permitido cancelar um agendamento já executado.");
-            var cat = mapper.Map<Agendamento>(agendamentoDto);
-            await this.repositorio.updateAsync(cat);
+
+            var agendamento = _mapper.Map<Agendamento>(agendamentoDto);
+            await _repositorio.updateAsync(agendamento);
         }
 
         public async Task<IEnumerable<AgendamentoDto>> getByClienteAsync(int idCliente)
         {
-            var lista = await repositorio.getAllAsync(a => a.idCliente == idCliente);
-            return mapper.Map<IEnumerable<AgendamentoDto>>(lista);
+            var lista = await _repositorio.getAllAsync(a => a.idCliente == idCliente);
+            return _mapper.Map<IEnumerable<AgendamentoDto>>(lista);
         }
-
-
     }
 }
-

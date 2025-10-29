@@ -17,12 +17,15 @@ namespace Service
         private IUserRepositorio repositorio;
 
         private IMapper mapper;
+        private IClienteRepositorio clienteRepositorio;
 
         public UserService(IUserRepositorio repositorio,
-            IMapper mapper)
+            IMapper mapper,
+            IClienteRepositorio clienteRepositorio)
         {
             this.repositorio = repositorio;
             this.mapper = mapper;
+            this.clienteRepositorio = clienteRepositorio;
         }
 
         public async Task<UserDto> addAsync(UserDto userDtos)
@@ -77,22 +80,43 @@ namespace Service
 
         public async Task<UserDto> RegisterAsync(UserRegisterDto registerDto)
         {
+            // 1️⃣ Validação de senha
             if (registerDto.Senha != registerDto.ConfirmarSenha)
                 throw new Exception("As senhas não coincidem.");
 
+            // 2️⃣ Verifica se o usuário já existe
             var existe = await repositorio.getAllAsync(u => u.user == registerDto.User);
             if (existe.Any())
                 throw new Exception("Usuário já existe.");
 
+            // Cria o cliente se não existir
+            Cliente? cliente = null;
+
+            if (registerDto.ClienteId == null)
+            {
+                cliente = new Cliente
+                {
+                    nome = registerDto.Nome,
+                    email = registerDto.Email,
+                    telefone = registerDto.Telefone
+                };
+
+                cliente = await clienteRepositorio.addAsync(cliente);
+            }
+
+            // Cria o usuário vinculado ao cliente
             var entidade = new User
             {
                 user = registerDto.User,
-                senha = registerDto.Senha, // ideal criptografar
-                ClienteId = registerDto.ClienteId
+                senha = registerDto.Senha, // ideal seria criptografar depois
+                ClienteId = cliente?.Id ?? registerDto.ClienteId
             };
 
             entidade = await repositorio.addAsync(entidade);
+
+            // Retorna o DTO mapeado
             return mapper.Map<UserDto>(entidade);
         }
+
     }
 }

@@ -12,5 +12,7 @@ namespace Dominio.Dto
         public string user { get; set; } = string.Empty;
         public string senha { get; set; } = string.Empty;
         public int? ClienteId { get; set; }
+
+        public string? ClienteNome { get; set; }
     }
 }

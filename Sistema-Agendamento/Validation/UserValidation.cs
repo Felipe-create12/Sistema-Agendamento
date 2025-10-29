@@ -12,14 +12,6 @@ namespace Sistema_Agendamento.Validation
                 .MinimumLength(3).WithMessage("O nome de usuário deve ter pelo menos 3 caracteres.")
                 .MaximumLength(100).WithMessage("O nome de usuário deve ter no máximo 100 caracteres.");
 
-            RuleFor(u => u.senha)
-                .NotEmpty().WithMessage("A senha é obrigatória.")
-                .MinimumLength(6).WithMessage("A senha deve ter no mínimo 6 caracteres.")
-                .MaximumLength(255).WithMessage("A senha deve ter no máximo 255 caracteres.");
-
-
-
-
         }
     }
 }

@@ -22,40 +22,38 @@ namespace Sistema_Agendamento.Controllers
         }
 
         [HttpPost("login")]
-        public async Task<IActionResult> Login([FromBody] UserDto loginDetalhes)
+        public async Task<IActionResult> Login([FromBody] LoginRequestDto login)
         {
-            if (loginDetalhes == null || string.IsNullOrWhiteSpace(loginDetalhes.user) || string.IsNullOrWhiteSpace(loginDetalhes.senha))
+            // 🔹 1. Validação dos campos obrigatórios
+            if (login == null || string.IsNullOrWhiteSpace(login.User) || string.IsNullOrWhiteSpace(login.Senha))
                 return BadRequest(new { message = "Usuário e senha são obrigatórios." });
 
-            // 🔹 Busca o usuário no banco pelo nome de login
-            var user = (await _userService.getAllAsync(u => u.user == loginDetalhes.user)).FirstOrDefault();
+            // 🔹 2. Busca o usuário no banco
+            var user = (await _userService.getAllAsync(u => u.user == login.User)).FirstOrDefault();
 
             if (user == null)
                 return Unauthorized(new { message = "Usuário não encontrado." });
 
-            // 🔹 Aqui poderia ser comparado um hash de senha (se você usar criptografia)
-            if (user.senha != loginDetalhes.senha)
+            // 🔹 3. Verifica senha em texto puro (não recomendado para produção)
+            if (user.senha != login.Senha)
                 return Unauthorized(new { message = "Senha incorreta." });
 
-            if (!user.ClienteId.Equals(0)) // garante que existe cliente
-            {
-
-                // 🔹 Gera token JWT real com base no usuário
-                var tokenString = GerarTokenJWT(user);
-                return Ok(new
-                {
-                    access_token = tokenString,
-                    token_type = "Bearer",
-                    expires_in = 60 * 60,
-                    user = user.user,
-                    clienteId = user.ClienteId
-                });
-            }
-            else
-            {
+            // 🔹 4. Garante que o usuário está vinculado a um cliente
+            if (user.ClienteId == null || user.ClienteId == 0)
                 return BadRequest(new { message = "Usuário não possui cliente associado." });
-            }
 
+            // 🔹 5. Gera token JWT com base no usuário autenticado
+            var tokenString = GerarTokenJWT(user);
+
+            // 🔹 6. Retorna o token e dados básicos
+            return Ok(new
+            {
+                access_token = tokenString,
+                token_type = "Bearer",
+                expires_in = 60 * 60,
+                user = user.user,
+                clienteId = user.ClienteId
+            });
         }
 
         private string GerarTokenJWT(UserDto user)
@@ -70,7 +68,8 @@ namespace Sistema_Agendamento.Controllers
             {
                 new Claim(JwtRegisteredClaimNames.Sub, user.Id.ToString()),
                 new Claim(JwtRegisteredClaimNames.UniqueName, user.user),
-                new Claim(ClaimTypes.Role, "User") // Aqui você pode colocar o papel real se tiver
+                new Claim("clienteId", user.ClienteId?.ToString() ?? ""),
+                new Claim(ClaimTypes.Role, "User")
             };
 
             var token = new JwtSecurityToken(

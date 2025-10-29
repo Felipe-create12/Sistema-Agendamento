@@ -1,96 +1,108 @@
 ﻿using Dominio.Dto;
-using Interface.Service;
-using Microsoft.AspNetCore.Mvc;
 using FluentValidation;
-
+using Interface.Service;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.IdentityModel.Tokens;
+using System.IdentityModel.Tokens.Jwt;
+using System.Security.Claims;
 
 namespace Sistema_Agendamento.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
-
+    [Authorize]
     public class AgendamentoController : ControllerBase
     {
-        private IAgendamentoService service;
-        private IValidator<AgendamentoDto> validator;
+        private readonly IAgendamentoService _service;
+        private readonly IValidator<AgendamentoDto> _validator;
+        private readonly IUserService _userService;
 
-        public AgendamentoController(IAgendamentoService service, IValidator<AgendamentoDto> validator)
+        public AgendamentoController(
+            IAgendamentoService service,
+            IValidator<AgendamentoDto> validator,
+            IUserService userService)
         {
-            this.service = service;
-            this.validator = validator;
+            _service = service;
+            _validator = validator;
+            _userService = userService;
         }
 
         [HttpPost]
-        public async Task<ActionResult<AgendamentoDto>>
-            addAsync(AgendamentoDto agendamentoDto)
+        public async Task<ActionResult<AgendamentoDto>> addAsync(AgendamentoDto agendamentoDto)
         {
+            // 🔹 1. Obter o ClienteId do usuário logado via token JWT
+            var userIdClaim = User.FindFirst(JwtRegisteredClaimNames.Sub)?.Value;
+            if (string.IsNullOrEmpty(userIdClaim) || !int.TryParse(userIdClaim, out int userId))
+                return Unauthorized(new { message = "Usuário não autenticado." });
 
-            var result = validator.Validate(agendamentoDto);
-            if (result.IsValid)
-            {
-                var dto = await this.service.addAsync(agendamentoDto);
-                return Ok(dto);
-            }
-            else
-                return BadRequest(result);
+            var user = await _userService.getAsyc(userId);
+            if (user == null || user.ClienteId == null)
+                return BadRequest(new { message = "Usuário não possui cliente associado." });
 
+            agendamentoDto.idCliente = user.ClienteId.Value;
 
+            // 🔹 2. Validação do DTO
+            var validationResult = _validator.Validate(agendamentoDto);
+            if (!validationResult.IsValid)
+                return BadRequest(validationResult.Errors);
+
+            // 🔹 3. Criar agendamento
+            var dto = await _service.addAsync(agendamentoDto);
+            return Ok(dto);
         }
 
         [HttpGet]
-        public async Task<ActionResult<IEnumerable<AgendamentoDto>>>
-           getAllAsync()
+        public async Task<ActionResult<IEnumerable<AgendamentoDto>>> getAllAsync()
         {
-            var lista = await this.service.getAllAsync(p => true);
+            var lista = await _service.getAllAsync(p => true);
             return Ok(lista);
-
         }
 
         [HttpGet("filtrar/{status}")]
         public async Task<ActionResult<IEnumerable<AgendamentoDto>>> getDescricaoAsync(string status)
         {
-            var lista = await this.service.getAllAsync(p => p.Status.Contains(status));
+            var lista = await _service.getAllAsync(p => p.Status.Contains(status));
             return Ok(lista);
-
         }
 
         [HttpGet("{id}")]
-        public async Task<ActionResult<AgendamentoDto>>
-            getAsync(int id)
+        public async Task<ActionResult<AgendamentoDto>> getAsync(int id)
         {
-            var cat = await this.service.getAsyc(id);
-            if (cat == null)
-                return NotFound(); //não encontrou
-            else
-                return Ok(cat);
+            var agendamento = await _service.getAsyc(id);
+            if (agendamento == null)
+                return NotFound();
+            return Ok(agendamento);
         }
 
         [HttpPut]
-        public async Task<ActionResult>
-            updateAsync(AgendamentoDto cat)
+        public async Task<ActionResult> updateAsync(AgendamentoDto agendamentoDto)
         {
+            var validationResult = _validator.Validate(agendamentoDto);
+            if (!validationResult.IsValid)
+                return BadRequest(validationResult.Errors);
 
-
-            var result = validator.Validate(cat);
-            if (result.IsValid)
-            {
-                await this.service.updateAsync(cat);
-                return NoContent();
-            }
-            else return BadRequest(result);
-
+            await _service.updateAsync(agendamentoDto);
+            return NoContent();
         }
 
-        [HttpGet("cliente/{idCliente}")]
-        public async Task<ActionResult<IEnumerable<AgendamentoDto>>> GetByClienteAsync(int idCliente)
+        [HttpGet("cliente")]
+        public async Task<ActionResult<IEnumerable<AgendamentoDto>>> GetByClienteAsync()
         {
-            var lista = await this.service.getByClienteAsync(idCliente);
+            // 🔹 Obter ClienteId do usuário logado
+            var userIdClaim = User.FindFirst(JwtRegisteredClaimNames.Sub)?.Value;
+            if (string.IsNullOrEmpty(userIdClaim) || !int.TryParse(userIdClaim, out int userId))
+                return Unauthorized(new { message = "Usuário não autenticado." });
 
-            if (lista == null || !lista.Any())
+            var user = await _userService.getAsyc(userId);
+            if (user == null || user.ClienteId == null)
+                return BadRequest(new { message = "Usuário não possui cliente associado." });
+
+            var lista = await _service.getByClienteAsync(user.ClienteId.Value);
+            if (!lista.Any())
                 return NotFound("Nenhum agendamento encontrado para este cliente.");
 
             return Ok(lista);
         }
-
     }
 }

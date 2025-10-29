@@ -12,9 +12,15 @@ namespace Sistema_Agendamento.Mapping
             CreateMap<Cliente, ClienteDto>().ReverseMap();
             CreateMap<Profissional, ProfissionalDto>().ReverseMap();
             CreateMap<Servico, ServicoDto>().ReverseMap();
-            CreateMap<User, UserDto>().ReverseMap();
-            CreateMap<UserRegisterDto, User>().ReverseMap();
             CreateMap<Empresa, EmpresaDto>().ReverseMap();
+
+            CreateMap<User, UserDto>()
+                // Mapeia o nome do cliente vinculado automaticamente
+                .ForMember(dest => dest.ClienteNome, opt => opt.MapFrom(src => src.Cliente != null ? src.Cliente.nome : null))
+                .ReverseMap();
+
+            // 🔹 UserRegisterDto → User
+            CreateMap<UserRegisterDto, User>().ReverseMap();
 
         }
     }
