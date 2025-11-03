@@ -31,10 +31,16 @@ namespace Sistema_Agendamento.Controllers
         [HttpPost]
         public async Task<ActionResult<AgendamentoDto>> addAsync(AgendamentoDto agendamentoDto)
         {
-            // 🔹 1. Obter o ClienteId do usuário logado via token JWT
+            var authHeader = Request.Headers["Authorization"].ToString();
+            Console.WriteLine($"[DEBUG] Authorization header: {authHeader}");
+
             var userIdClaim = User.FindFirst(JwtRegisteredClaimNames.Sub)?.Value;
+            Console.WriteLine($"[DEBUG] userIdClaim: {userIdClaim}");
+
             if (string.IsNullOrEmpty(userIdClaim) || !int.TryParse(userIdClaim, out int userId))
                 return Unauthorized(new { message = "Usuário não autenticado." });
+
+            Console.WriteLine($"[DEBUG] userId (int): {userId}");
 
             var user = await _userService.getAsyc(userId);
             if (user == null || user.ClienteId == null)
