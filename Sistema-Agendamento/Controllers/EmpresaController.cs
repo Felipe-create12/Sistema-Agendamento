@@ -105,5 +105,17 @@ namespace Sistema_Agendamento.Controllers
             return Ok(lista);
         }
 
+        [HttpDelete("deletar/{id}")]
+        public async Task<ActionResult> DeleteAsync(int id)
+        {
+            var empresa = await service.getAsyc(id);
+
+            if (empresa == null)
+                return NotFound(new { message = "Empresa não encontrada." });
+
+            await service.removeAsyc(id);
+            return Ok(new { message = "Empresa removida com sucesso!" });
+        }
+
     }
 }

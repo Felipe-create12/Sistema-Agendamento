@@ -82,6 +82,17 @@ namespace Sistema_Agendamento.Controllers
             else return BadRequest(result);
 
         }
+        [HttpDelete("deletar/{id}")]
+        public async Task<ActionResult> deleteAsync(int id)
+        {
+            var cliente = await this.service.getAsyc(id);
+
+            if (cliente == null)
+                return NotFound(new { message = "Cliente não encontrado." });
+
+            await this.service.removeAsyc(id);
+            return Ok(new { message = "Cliente removido com sucesso!" });
+        }
 
     }
 }

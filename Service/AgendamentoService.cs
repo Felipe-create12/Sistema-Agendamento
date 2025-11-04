@@ -96,5 +96,7 @@ namespace Service
             var lista = await _repositorio.getAllAsync(a => a.idCliente == idCliente);
             return _mapper.Map<IEnumerable<AgendamentoDto>>(lista);
         }
+
+
     }
 }

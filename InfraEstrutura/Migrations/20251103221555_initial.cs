@@ -55,7 +55,7 @@ namespace InfraEstrutura.Migrations
                         .Annotation("SqlServer:Identity", "1, 1"),
                     user = table.Column<string>(type: "nvarchar(100)", maxLength: 100, nullable: false),
                     senha = table.Column<string>(type: "nvarchar(100)", maxLength: 100, nullable: false),
-                    ClienteId = table.Column<int>(type: "int", nullable: true)
+                    ClienteId = table.Column<int>(type: "int", nullable: false)
                 },
                 constraints: table =>
                 {
@@ -187,8 +187,7 @@ namespace InfraEstrutura.Migrations
                 name: "IX_users_ClienteId",
                 table: "users",
                 column: "ClienteId",
-                unique: true,
-                filter: "[ClienteId] IS NOT NULL");
+                unique: true);
 
             migrationBuilder.CreateIndex(
                 name: "IX_users_user",
