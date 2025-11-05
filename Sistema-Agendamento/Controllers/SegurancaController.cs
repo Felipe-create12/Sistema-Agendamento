@@ -65,12 +65,14 @@ namespace Sistema_Agendamento.Controllers
 
             // 🔹 Claims baseadas no usuário real
             var claims = new[]
-            {
+{
                 new Claim(JwtRegisteredClaimNames.Sub, user.Id.ToString()),
+                new Claim(ClaimTypes.NameIdentifier, user.Id.ToString()), // ✅ para o ASP.NET reconhecer o ID
                 new Claim(JwtRegisteredClaimNames.UniqueName, user.user),
                 new Claim("clienteId", user.ClienteId?.ToString() ?? ""),
                 new Claim(ClaimTypes.Role, "User")
             };
+
 
             var token = new JwtSecurityToken(
                 issuer: issuer,

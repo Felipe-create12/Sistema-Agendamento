@@ -1,17 +1,17 @@
-using Microsoft.EntityFrameworkCore;
+using Dominio.Dto;
+using FluentValidation;
 using InfraEstrutura.Data;
-using Sistema_Agendamento.Mapping;
 using InfraEstrutura.Repositorio;
 using Interface.RepositorioI;
 using Interface.Service;
-using Service;
-
-using Dominio.Dto;
-using FluentValidation;
-using Sistema_Agendamento.Validation;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
+using Service;
+using Sistema_Agendamento.Mapping;
+using Sistema_Agendamento.Validation;
+using System.Security.Claims;
 using System.Text;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -64,7 +64,8 @@ builder.Services.AddAuthentication(options =>
                         ValidIssuer = builder.Configuration["Jwt:Issuer"],
                         ValidAudience = builder.Configuration["Jwt:Audience"],
                         IssuerSigningKey = new SymmetricSecurityKey
-                      (Encoding.UTF8.GetBytes(builder.Configuration["Jwt:Key"]))
+                      (Encoding.UTF8.GetBytes(builder.Configuration["Jwt:Key"])),
+                        NameClaimType = ClaimTypes.NameIdentifier
                     };
                 });
 builder.Services.AddSingleton<IConfiguration>(builder.Configuration);

@@ -34,8 +34,9 @@ namespace Sistema_Agendamento.Controllers
             var authHeader = Request.Headers["Authorization"].ToString();
             Console.WriteLine($"[DEBUG] Authorization header: {authHeader}");
 
-            var userIdClaim = User.FindFirst(JwtRegisteredClaimNames.Sub)?.Value;
-            Console.WriteLine($"[DEBUG] userIdClaim: {userIdClaim}");
+            var userIdClaim =
+            User.FindFirst(ClaimTypes.NameIdentifier)?.Value ??
+            User.FindFirst(JwtRegisteredClaimNames.Sub)?.Value;
 
             if (string.IsNullOrEmpty(userIdClaim) || !int.TryParse(userIdClaim, out int userId))
                 return Unauthorized(new { message = "Usuário não autenticado." });
@@ -96,7 +97,9 @@ namespace Sistema_Agendamento.Controllers
         public async Task<ActionResult<IEnumerable<AgendamentoDto>>> GetByClienteAsync()
         {
             // 🔹 Obter ClienteId do usuário logado
-            var userIdClaim = User.FindFirst(JwtRegisteredClaimNames.Sub)?.Value;
+            var userIdClaim =
+            User.FindFirst(ClaimTypes.NameIdentifier)?.Value ??
+            User.FindFirst(JwtRegisteredClaimNames.Sub)?.Value;
             if (string.IsNullOrEmpty(userIdClaim) || !int.TryParse(userIdClaim, out int userId))
                 return Unauthorized(new { message = "Usuário não autenticado." });
 

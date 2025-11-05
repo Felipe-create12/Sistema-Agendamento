@@ -17,6 +17,7 @@ namespace Service
         private readonly IClienteService _clienteService;
         private readonly IProfissionalService _profissionalService;
         private readonly IServicoService _servicoService;
+        private readonly IEmpresaService _empresaService;
         private readonly IMapper _mapper;
 
         public AgendamentoService(
@@ -24,13 +25,15 @@ namespace Service
             IMapper mapper,
             IClienteService clienteService,
             IProfissionalService profissionalService,
-            IServicoService servicoService)
+            IServicoService servicoService,
+            IEmpresaService empresaService)
         {
             _repositorio = repositorio;
             _mapper = mapper;
             _clienteService = clienteService;
             _profissionalService = profissionalService;
             _servicoService = servicoService;
+            _empresaService = empresaService;
         }
 
         public async Task<AgendamentoDto> addAsync(AgendamentoDto agendamentoDto)
@@ -92,10 +95,30 @@ namespace Service
         }
 
         public async Task<IEnumerable<AgendamentoDto>> getByClienteAsync(int idCliente)
+        
         {
             var lista = await _repositorio.getAllAsync(a => a.idCliente == idCliente);
-            return _mapper.Map<IEnumerable<AgendamentoDto>>(lista);
+
+            var resultado = new List<AgendamentoDto>();
+
+            foreach (var ag in lista)
+            {
+                var dto = _mapper.Map<AgendamentoDto>(ag);
+
+                var servico = await _servicoService.getAsyc(ag.idServico);
+                var profissional = await _profissionalService.getAsyc(ag.idProfissional);
+                var empresa = await _empresaService.getAsyc(ag.EmpresaId); // <- BUSCA CORRETA
+
+                dto.ServicoNome = servico?.nome ?? "Não informado";
+                dto.ProfissionalNome = profissional?.nome ?? "Não informado";
+                dto.EmpresaNome = empresa?.Nome ?? "Não informado";
+
+                resultado.Add(dto);
+            }
+
+            return resultado;
         }
+
 
 
     }
