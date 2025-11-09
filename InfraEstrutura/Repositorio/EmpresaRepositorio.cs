@@ -56,10 +56,23 @@ namespace InfraEstrutura.Repositorio
 
         public async Task updateAsync(Empresa empresa)
         {
-            this.contexto.Entry(empresa).State
-                = EntityState.Modified;
-            await this.contexto.SaveChangesAsync();
+            // Verifica se já existe uma instância rastreada com o mesmo Id
+            var local = contexto.Set<Empresa>()
+                .Local
+                .FirstOrDefault(entry => entry.Id == empresa.Id);
+
+            if (local != null)
+            {
+                // Desanexa o objeto antigo do contexto
+                contexto.Entry(local).State = EntityState.Detached;
+            }
+
+            // Marca a nova entidade como modificada
+            contexto.Entry(empresa).State = EntityState.Modified;
+
+            await contexto.SaveChangesAsync();
         }
+
 
         public async Task<IEnumerable<Empresa>> getEmpresasProximasAsync(double latitude, double longitude, double raioKm)
         {

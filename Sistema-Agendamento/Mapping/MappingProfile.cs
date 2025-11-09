@@ -8,7 +8,9 @@ namespace Sistema_Agendamento.Mapping
     {
         public MappingProfile()
         {
-            CreateMap<Agendamento, AgendamentoDto>().ReverseMap();
+            CreateMap<AgendamentoDto, Agendamento>()
+                .ForMember(dest => dest.Empresa, opt => opt.Ignore()) // não criar Empresa nova
+                .ReverseMap();
             CreateMap<Cliente, ClienteDto>().ReverseMap();
             CreateMap<Profissional, ProfissionalDto>().ReverseMap();
             CreateMap<Servico, ServicoDto>().ReverseMap();

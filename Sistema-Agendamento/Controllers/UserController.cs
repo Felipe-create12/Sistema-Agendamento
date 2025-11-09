@@ -91,24 +91,25 @@ namespace Sistema_Agendamento.Controllers
             else
                 return Ok(cat);
         }
-         
 
-        
+
+
         [HttpPut]
-        public async Task<ActionResult>
-            updateAsync(UserDto cat)
+        public async Task<ActionResult> updateAsync([FromBody] UserDto dto, [FromQuery] string senhaAtual)
         {
+            var user = await service.getAsyc(dto.Id);
 
+            if (user == null)
+                return NotFound("Usuário não encontrado.");
 
-            var result = validator.Validate(cat);
-            if (result.IsValid)
-            {
-                await this.service.updateAsync(cat);
-                return NoContent();
-            }
-            else return BadRequest(result);
+            if (user.senha != senhaAtual)
+                return BadRequest("Senha atual incorreta.");
 
+            user.senha = dto.senha;
+            await service.updateAsync(user);
+            return NoContent();
         }
+
 
         [HttpDelete("deletar/{id}")]
         public async Task<ActionResult> deleteAsync(int id)

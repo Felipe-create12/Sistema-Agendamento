@@ -69,14 +69,22 @@ namespace Service
             if (userExistente == null)
                 throw new Exception("Usuário não encontrado.");
 
-            // Se for alterar o nome, validar se já existe outro igual
+            // Validação da senha atual usando clienteNome como senhaAtual
+            if (userExistente.senha != userDtos.user)
+                throw new Exception("Senha atual incorreta.");
+
+            // Validação de nome duplicado
             var duplicado = await repositorio.getAllAsync(u => u.user == userDtos.user && u.Id != userDtos.Id);
             if (duplicado.Any())
                 throw new Exception("Já existe outro usuário com este nome.");
 
-            var entidade = mapper.Map<User>(userDtos);
-            await repositorio.updateAsync(entidade);
+            // Atualiza apenas a senha e dados relevantes
+            userExistente.senha = userDtos.senha;
+            userExistente.user = userDtos.user;
+
+            await repositorio.updateAsync(userExistente);
         }
+
 
         public async Task<UserDto> RegisterAsync(UserRegisterDto registerDto)
         {

@@ -52,9 +52,22 @@ namespace InfraEstrutura.Repositorio
 
         public async Task updateAsync(User users)
         {
-            this.contexto.Entry(users).State
-                = EntityState.Modified;
-            await this.contexto.SaveChangesAsync();
+            // Verifica se já existe uma instância rastreada com o mesmo Id
+            var local = contexto.Set<User>()
+                .Local
+                .FirstOrDefault(entry => entry.Id == users.Id);
+
+            if (local != null)
+            {
+                // Desanexa o objeto antigo do contexto
+                contexto.Entry(local).State = EntityState.Detached;
+            }
+
+            // Marca o novo objeto como modificado
+            contexto.Entry(users).State = EntityState.Modified;
+
+            await contexto.SaveChangesAsync();
         }
+
     }
 }

@@ -18,12 +18,17 @@ namespace Service
         private IEmpresaRepositorio repositorio;
 
         private IMapper mapper;
+        private IProfissionalService profissionalService;
+        private IServicoService servicoService;
 
         public EmpresaService(IEmpresaRepositorio repositorio,
-            IMapper mapper)
+            IMapper mapper,
+            IProfissionalService profissionalService,IServicoService servicoService)
         {
             this.repositorio = repositorio;
             this.mapper = mapper;
+            this.profissionalService = profissionalService;
+            this.servicoService = servicoService;
         }
 
         public async Task<EmpresaDto> addAsync(EmpresaDto empresaDto)
@@ -54,6 +59,7 @@ namespace Service
                 Estado = empresa.Estado,
                 Cep = empresa.Cep,
                 Telefone = empresa.Telefone,
+                Categoria = empresa.Categoria,
                 Servicos = empresa.Servicos?.Select(s => new ServicoDto
                 {
                     Id = s.Id,
@@ -74,16 +80,100 @@ namespace Service
 
         public async Task removeAsyc(int id)
         {
-            var cat = await this.repositorio.getAsyc(id);
-            if (cat != null)
-                await this.repositorio.removeAsyc(cat);
+            var empresa = await this.repositorio.getAsyc(id);
+
+            if (empresa == null)
+                throw new Exception("Empresa não encontrada.");
+
+            // 🔹 Remove serviços vinculados
+            if (empresa.Servicos != null && empresa.Servicos.Any())
+            {
+                var servicos = await servicoService.getAllAsync(s => s.EmpresaId == id);
+                foreach (var servico in servicos)
+                    await servicoService.removeAsyc(servico.Id);
+            }
+
+            // 🔹 Remove profissionais vinculados
+            if (empresa.Profissionais != null && empresa.Profissionais.Any())
+            {
+                var profissionais = await profissionalService.getAllAsync(p => p.EmpresaId == id);
+                foreach (var prof in profissionais)
+                    await profissionalService.removeAsyc(prof.Id);
+            }
+
+            // 🔹 Agora remove a empresa
+            await this.repositorio.removeAsyc(empresa);
         }
+
 
         public async Task updateAsync(EmpresaDto empresaDto)
         {
-            var cat = mapper.Map<Empresa>(empresaDto);
-            await this.repositorio.updateAsync(cat);
+            var empresa = await repositorio.getAsyc(empresaDto.Id);
+
+            if (empresa == null)
+                throw new Exception("Empresa não encontrada.");
+
+            // Atualiza dados principais
+            empresa.Nome = empresaDto.Nome;
+            empresa.Endereco = empresaDto.Endereco;
+            empresa.Cidade = empresaDto.Cidade;
+            empresa.Estado = empresaDto.Estado;
+            empresa.Cep = empresaDto.Cep;
+            empresa.Telefone = empresaDto.Telefone;
+            empresa.Categoria = empresaDto.Categoria;
+            empresa.Latitude = empresaDto.Latitude;
+            empresa.Longitude = empresaDto.Longitude;
+
+            // 🔹 Atualiza Serviços
+            var servicosExistentes = empresa.Servicos.ToList();
+
+            // Remove serviços que não vieram no DTO
+            foreach (var servico in servicosExistentes)
+            {
+                if (!empresaDto.Servicos.Any(s => s.Id == servico.Id))
+                    servicoService.removeAsyc(servico.Id);
+            }
+
+            // Adiciona/atualiza serviços
+            foreach (var servicoDto in empresaDto.Servicos)
+            {
+                if (servicoDto.Id == 0)
+                {
+                    await servicoService.addAsync(servicoDto);
+                }
+                else
+                {
+                    await servicoService.updateAsync(servicoDto);
+                }
+            }
+
+            // 🔹 Atualiza Profissionais
+            var profissionaisExistentes = empresa.Profissionais.ToList();
+
+            // Remove profissionais que não vieram no DTO
+            foreach (var prof in profissionaisExistentes)
+            {
+                if (!empresaDto.Profissionais.Any(p => p.Id == prof.Id))
+                    profissionalService.removeAsyc(prof.Id);
+            }
+
+            // Adiciona/atualiza profissionais
+            foreach (var profDto in empresaDto.Profissionais)
+            {
+                if (profDto.Id == 0)
+                {
+                    await profissionalService.addAsync(profDto);
+                }
+                else
+                {
+                    await profissionalService.updateAsync(profDto);
+                }
+            }
+
+            // 🔹 Atualiza empresa
+            await repositorio.updateAsync(empresa);
         }
+
 
         public async Task<IEnumerable<EmpresaDto>> GetEmpresasProximasAsync(double latitude, double longitude, double raioKm)
         {

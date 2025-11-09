@@ -20,7 +20,7 @@ namespace InfraEstrutura.Repositorio
             this.contexto = contexto;
 
         }
-
+        
         public async Task<Agendamento> addAsync(Agendamento agendamento)
         {
             await this.contexto.agendamento.AddAsync(agendamento);
@@ -53,9 +53,22 @@ namespace InfraEstrutura.Repositorio
 
         public async Task updateAsync(Agendamento agendamento)
         {
-            this.contexto.Entry(agendamento).State
-                = EntityState.Modified;
-            await this.contexto.SaveChangesAsync();
+            // Verifica se já existe uma entidade rastreada com o mesmo Id
+            var local = contexto.Set<Agendamento>()
+                .Local
+                .FirstOrDefault(entry => entry.Id == agendamento.Id);
+
+            if (local != null)
+            {
+                // Desanexa a instância antiga para evitar conflito
+                contexto.Entry(local).State = EntityState.Detached;
+            }
+
+            // Marca o novo objeto como modificado
+            contexto.Entry(agendamento).State = EntityState.Modified;
+
+            await contexto.SaveChangesAsync();
         }
+
     }
 }
