@@ -90,10 +90,12 @@ namespace Service
             if (existe.Any())
                 throw new Exception("Usuário já existe.");
 
-            // Cria o cliente se não existir
-            Cliente? cliente = null;
+            // 3️⃣ Verifica se já existe cliente com mesmo e-mail
+            var clientes = await clienteRepositorio.getAllAsync(c => c.email == registerDto.Email);
+            var cliente = clientes.FirstOrDefault();
 
-            if (registerDto.ClienteId == null)
+
+            if (cliente == null)
             {
                 cliente = new Cliente
                 {
@@ -105,19 +107,20 @@ namespace Service
                 cliente = await clienteRepositorio.addAsync(cliente);
             }
 
-            // Cria o usuário vinculado ao cliente
+            // 4️⃣ Cria o usuário vinculado ao cliente
             var entidade = new User
             {
                 user = registerDto.User,
-                senha = registerDto.Senha, // ideal seria criptografar depois
-                ClienteId = cliente?.Id ?? registerDto.ClienteId
+                senha = registerDto.Senha, // ideal: criptografar
+                ClienteId = cliente.Id
             };
 
             entidade = await repositorio.addAsync(entidade);
 
-            // Retorna o DTO mapeado
+            // 5️⃣ Retorna o DTO mapeado
             return mapper.Map<UserDto>(entidade);
         }
+
 
         public async Task updateAsync(UserDto userDtos)
         {
