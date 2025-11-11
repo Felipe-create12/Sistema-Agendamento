@@ -63,27 +63,20 @@ namespace Service
                 await this.repositorio.removeAsyc(cat);
         }
 
-        public async Task updateAsync(UserDto userDtos)
+        public async Task AlterarSenhaAsync(AlterarSenhaDto dto)
         {
-            var userExistente = await repositorio.getAsyc(userDtos.Id);
+            var userExistente = await repositorio.getAsyc(dto.UserId);
             if (userExistente == null)
                 throw new Exception("Usuário não encontrado.");
 
-            // Validação da senha atual usando clienteNome como senhaAtual
-            if (userExistente.senha != userDtos.user)
+            if (userExistente.senha != dto.SenhaAtual)
                 throw new Exception("Senha atual incorreta.");
 
-            // Validação de nome duplicado
-            var duplicado = await repositorio.getAllAsync(u => u.user == userDtos.user && u.Id != userDtos.Id);
-            if (duplicado.Any())
-                throw new Exception("Já existe outro usuário com este nome.");
-
-            // Atualiza apenas a senha e dados relevantes
-            userExistente.senha = userDtos.senha;
-            userExistente.user = userDtos.user;
+            userExistente.senha = dto.NovaSenha;
 
             await repositorio.updateAsync(userExistente);
         }
+
 
 
         public async Task<UserDto> RegisterAsync(UserRegisterDto registerDto)
@@ -125,6 +118,20 @@ namespace Service
             // Retorna o DTO mapeado
             return mapper.Map<UserDto>(entidade);
         }
+
+        public async Task updateAsync(UserDto userDtos)
+        {
+            var userExistente = await repositorio.getAsyc(userDtos.Id);
+            if (userExistente == null)
+                throw new Exception("Usuário não encontrado.");
+
+            // Atualiza os campos necessários
+            userExistente.user = userDtos.user;
+            userExistente.senha = userDtos.senha;
+
+            await repositorio.updateAsync(userExistente);
+        }
+
 
     }
 }

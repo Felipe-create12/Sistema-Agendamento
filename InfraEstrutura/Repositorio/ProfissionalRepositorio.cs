@@ -1,4 +1,5 @@
-﻿using Dominio.Entidades;
+﻿using Dominio.Dto;
+using Dominio.Entidades;
 using InfraEstrutura.Data;
 using Interface.RepositorioI;
 using Microsoft.EntityFrameworkCore;
@@ -52,12 +53,20 @@ namespace InfraEstrutura.Repositorio
             await this.contexto.SaveChangesAsync();
         }
 
-        public async Task updateAsync(Profissional profissional)
+        public async Task updateAsync(Profissional dto)
         {
-            this.contexto.Entry(profissional).State
-                = EntityState.Modified;
-            await this.contexto.SaveChangesAsync();
+            var profissional = await contexto.profissional.FindAsync(dto.Id);
+            if (profissional == null)
+                throw new Exception("Profissional não encontrado");
+
+            // Atualiza apenas os campos necessários
+            profissional.nome = dto.nome;
+            profissional.especialidade = dto.especialidade;
+            profissional.EmpresaId = dto.EmpresaId;
+
+            await contexto.SaveChangesAsync();
         }
+
     }
 }
 

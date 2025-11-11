@@ -131,12 +131,14 @@ namespace Service
             foreach (var servico in servicosExistentes)
             {
                 if (!empresaDto.Servicos.Any(s => s.Id == servico.Id))
-                    servicoService.removeAsyc(servico.Id);
+                    await servicoService.removeAsyc(servico.Id);
             }
 
             // Adiciona/atualiza serviços
             foreach (var servicoDto in empresaDto.Servicos)
             {
+                servicoDto.EmpresaId = empresa.Id;
+
                 if (servicoDto.Id == 0)
                 {
                     await servicoService.addAsync(servicoDto);
@@ -154,12 +156,14 @@ namespace Service
             foreach (var prof in profissionaisExistentes)
             {
                 if (!empresaDto.Profissionais.Any(p => p.Id == prof.Id))
-                    profissionalService.removeAsyc(prof.Id);
+                    await profissionalService.removeAsyc(prof.Id);
             }
 
             // Adiciona/atualiza profissionais
             foreach (var profDto in empresaDto.Profissionais)
             {
+                profDto.EmpresaId = empresa.Id;
+
                 if (profDto.Id == 0)
                 {
                     await profissionalService.addAsync(profDto);
@@ -172,6 +176,7 @@ namespace Service
 
             // 🔹 Atualiza empresa
             await repositorio.updateAsync(empresa);
+
         }
 
 

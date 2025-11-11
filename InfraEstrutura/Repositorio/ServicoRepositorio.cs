@@ -1,4 +1,5 @@
-﻿using Dominio.Entidades;
+﻿using Dominio.Dto;
+using Dominio.Entidades;
 using InfraEstrutura.Data;
 using Interface.RepositorioI;
 using Microsoft.EntityFrameworkCore;
@@ -51,12 +52,21 @@ namespace InfraEstrutura.Repositorio
             await this.contexto.SaveChangesAsync();
         }
 
-        public async Task updateAsync(Servico servicio)
+        public async Task updateAsync(Servico dto)
         {
-            this.contexto.Entry(servicio).State
-                = EntityState.Modified;
-            await this.contexto.SaveChangesAsync();
+            var servico = await contexto.servicio.FindAsync(dto.Id);
+            if (servico == null)
+                throw new Exception("Serviço não encontrado");
+
+            // Atualiza apenas os campos necessários
+            servico.nome = dto.nome;
+            servico.preco = dto.preco;
+            servico.DuracaoEmMinutos = dto.DuracaoEmMinutos;
+            servico.EmpresaId = dto.EmpresaId;
+
+            await contexto.SaveChangesAsync();
         }
+
     }
 }
 

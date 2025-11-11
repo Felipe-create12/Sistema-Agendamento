@@ -94,21 +94,20 @@ namespace Sistema_Agendamento.Controllers
 
 
 
-        [HttpPut]
-        public async Task<ActionResult> updateAsync([FromBody] UserDto dto, [FromQuery] string senhaAtual)
+        [HttpPut("alterar-senha")]
+        public async Task<ActionResult> AlterarSenha(AlterarSenhaDto dto)
         {
-            var user = await service.getAsyc(dto.Id);
-
-            if (user == null)
-                return NotFound("Usuário não encontrado.");
-
-            if (user.senha != senhaAtual)
-                return BadRequest("Senha atual incorreta.");
-
-            user.senha = dto.senha;
-            await service.updateAsync(user);
-            return NoContent();
+            try
+            {
+                await service.AlterarSenhaAsync(dto);
+                return Ok("Senha alterada com sucesso");
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ex.Message);
+            }
         }
+
 
 
         [HttpDelete("deletar/{id}")]

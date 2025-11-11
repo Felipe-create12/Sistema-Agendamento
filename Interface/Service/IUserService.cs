@@ -19,5 +19,6 @@ namespace Interface.Service
                         expression);
         Task updateAsync(UserDto userDtos);
         Task<UserDto> RegisterAsync(UserRegisterDto registerDto);
+        Task AlterarSenhaAsync(AlterarSenhaDto dto);
     }
 }
